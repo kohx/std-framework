@@ -1,0 +1,35 @@
+<?php
+
+return array(
+	'alpha' => ':label must contain only letters',
+	'alpha_dash' => ':label must contain only numbers, letters and dashes',
+	'alpha_numeric' => ':label must contain only letters and numbers',
+	'color' => ':label must be a color',
+	'credit_card' => ':label must be a credit card number',
+	'date' => ':label must be a date',
+	'decimal' => ':label must be a decimal with :param2 places',
+	'digit' => ':label must be a digit',
+	'email' => ':label must be an email address',
+	'email_domain' => ':label must contain a valid email domain',
+	'equals' => ':label must equal :param2',
+	'exact_length' => ':label must be exactly :param2 characters long',
+	'in_array' => ':label must be one of the available options',
+	'ip' => ':label must be an ip address',
+	'matches' => ':label must be the same as :param4',
+	'min_length' => ':label must be at least :param2 characters long',
+	'max_length' => ':label must not exceed :param2 characters long',
+	'not_empty' => ':label must not be empty',
+	'numeric' => ':label must be numeric',
+	'phone' => ':label must be a phone number',
+	'range' => ':label must be within the range of :param2 to :param3',
+	'regex' => ':label does not match the required format',
+	'url' => ':label must be a url',
+	
+	'original' => ':label original message.',
+	// for image
+	'Upload::not_empty' => ':label must not be empty',
+	'Upload::valid' => ':label data is valid',
+	'Upload::image' => ':label must be image file and size in :param2 X :param3',
+	'Upload::type' => ':label must be type from :param2',
+	'Upload::size' => ':label must be less than :param2 size',
+);
