@@ -19,12 +19,25 @@ class Controller_Home extends Controller {
 
 	public function get_index($arguments)
 	{
- 
+
 		// database query test
 
 		$db = DBquery::fact();
 
 		// Insert1
+//		$ids = $db->table('users')
+//				->insert([
+//			['username' => 'kohei1', 'displayname' => 'kohx1'],
+//			['username' => 'kohei2', 'displayname' => 'kohx2'],
+//			['username' => 'kohei3', 'displayname' => 'kohx3'],
+//			['username' => 'kohei4', 'displayname' => 'kohx4'],
+//			['username' => 'kohei5', 'displayname' => 'kohx5'],
+//		]);
+//
+//		Debug::p($db->get_query());
+//		Debug::p($ids);
+//		die;
+//		
 //		$ids = $db->table('users')
 //				->insert([
 //			['id' => 1, 'username' => 'kohei1', 'displayname' => 'kohx1'],
@@ -33,45 +46,45 @@ class Controller_Home extends Controller {
 //			['id' => 4, 'username' => 'kohei4', 'displayname' => 'kohx4'],
 //			['id' => 5, 'username' => 'kohei5', 'displayname' => 'kohx5'],
 //		]);
-//		
+//				
 //		Debug::p($db->get_query());
 //		Debug::p($ids);
 //		die;
-//		
+//		 
 		// Insert2
-// 		$ids = $db->table('users')
-//				->insert(
-//				['username', 'displayname'], [
-//			['kohei2', 'kohx2'],
-//			['okuda2', 'okuda2'],
-//		]);
-//
-//		Debug::p($db->get_query());
-//		Debug::p($ids);
-//		die;
-//		
-		// Update
-		Debug::timer()->start('pre1');
-		$ids = $db->table('users')
-				->where('id', 'in', [1,3,5,7,9])
-				->update(
-				['username' => 'kohei@', 'displayname' => 'kohx@']
-		);
-		Debug::p($ids);
-		Debug::p($db->get_query());
-		Debug::timer()->end('pre1');
-		Debug::timer()->show('pre1');
-		die;
-//		
-		// Delete
-		Debug::timer()->start();
-		$ids = $db->table('users')
-				->where('id', 'between', [1,5])
-				->delete();
+ 		$ids = $db->table('users')
+				->insert(
+				['username', 'displayname'], [
+			['kohei1', 'kohx1'],
+			['kohei2', 'kohx2'],
+		]);
 
 		Debug::p($db->get_query());
 		Debug::p($ids);
 		die;
+//		
+		// Update
+//		Debug::timer()->start('pre1');
+//		$ids = $db->table('users')
+//				->where('id', 'in', [1,3,5,7,9])
+//				->update(
+//				['username' => 'kohei@', 'displayname' => 'kohx@']
+//		);
+//		Debug::p($ids);
+//		Debug::p($db->get_query());
+//		Debug::timer()->end('pre1');
+//		Debug::timer()->show('pre1');
+//		die;
+//		
+		// Delete
+//		Debug::timer()->start();
+//		$ids = $db->table('users')
+//				->where('id', 'between', [1,5])
+//				->delete();
+//
+//		Debug::p($db->get_query());
+//		Debug::p($ids);
+//		die;
 //
 //		$db = DB::fact()
 //				->select(DB::ex('max(id)'), DB::ex('min(id)'))
