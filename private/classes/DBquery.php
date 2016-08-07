@@ -724,10 +724,11 @@ class DBquery {
 	}
 
 	/**
-	 * Get one row
+	 * Get one row from selected row
 	 * 
 	 * 			$db->one();
-	 * 			$db->one('');
+	 * 			$db->one('id');
+	 * 			$db->one('username');
 	 * 
 	 * @param string $key
 	 * @return mix
@@ -745,7 +746,8 @@ class DBquery {
 	}
 
 	/**
-	 * Count 
+	 * Selected row ount 
+	 *			For select
 	 * 
 	 * 			$db = DB::fact()
 	 * 				->select()
@@ -797,14 +799,21 @@ class DBquery {
 	 */
 	public function insert($datas)
 	{
+		// if args == 1 else 2
+		// 
 		// Set type
 		$this->_type = 'insert';
 
+		// Build keys
+		$keys = array_keys(reset($datas));
+		$keys_str = implode(', ', $keys);
+
+		// Build query
+		$query = "insert into {$this->_table} ({$keys_str}) values";
+		$query_values = [];
+
 		foreach ($datas as $data)
 		{
-			$keys = array_keys($data);
-			$keys_str = implode(', ', $keys);
-
 			$values = array_values($data);
 
 			$convertions = [];
@@ -815,32 +824,39 @@ class DBquery {
 			}
 
 			$conversions_str = implode(', ', $convertions);
-
-			$query = "insert into {$this->_table} ({$keys_str}) values ({$conversions_str});";
-
-			$stt = $this->_connection->prepare($query);
-
-			foreach ($this->_values as $k => $v)
-			{
-				$type = is_numeric($v) ? PDO::PARAM_INT : PDO::PARAM_STR;
-
-				$stt->bindValue($k, $v, $type);
-			}
-
-			$stt->execute();
-
-			// For pgsql
-			$sequence_object = Config::fact('db')->get('sequence_object');
-
-			// Set inserted id to _results
-			$this->_results[] = $this->_connection->lastInsertId($sequence_object);
-
-			// Make sql query 
-			$this->_query .= str_replace(array_keys($this->_values), array_values($this->_values), $query). "\n";
-
-			// Reset this values
-			$this->_values = [];
+			$query_values[] = " ({$conversions_str})";
 		}
+
+		$query .= implode(', ', $query_values);
+
+		// Prepared
+		$stt = $this->_connection->prepare($query);
+
+		// Bind values
+		foreach ($this->_values as $k => $v)
+		{
+			$type = is_numeric($v) ? PDO::PARAM_INT : PDO::PARAM_STR;
+
+			$stt->bindValue($k, $v, $type);
+		}
+
+		$stt->execute();
+
+		// For pgsql
+		$sequence_object = Config::fact('db')->get('sequence_object');
+
+		// Set inserted id to _results
+		$last_id = $this->_connection->lastInsertId($sequence_object);
+
+		$count = $stt->rowCount() - 1;
+
+		for ($i = $count; $i >= 0; $i--)
+		{
+			$this->_results[] = $last_id - ($i - 1);
+		}
+		
+		// Make sql query 
+		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query);
 
 		$this->reset();
 
@@ -867,28 +883,28 @@ class DBquery {
 
 		// Set type
 		$this->_type = 'update';
-		
+
 		// Do update
 		$sets = [];
 
 		foreach ($data as $key => $value)
 		{
 			$conversion = self::conv($value);
-			$sets[] = $key . ' = ' . $conversion;			
+			$sets[] = $key . ' = ' . $conversion;
 		}
 
 		$sets_str = implode(', ', $sets);
-		
+
 		$query = "update {$this->_table} set {$sets_str}";
-		
+
 		// where
 		if ($this->_wheres)
 		{
 			$query .= ' ' . implode(' ', $this->_wheres);
 		}
-				
+
 		$stt = $this->_connection->prepare($query);
-		
+
 		foreach ($this->_values as $k => $v)
 		{
 			$type = is_numeric($v) ? PDO::PARAM_INT : PDO::PARAM_STR;
@@ -897,14 +913,13 @@ class DBquery {
 		}
 
 		$stt->execute();
-		
+
 		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query);
-		
+
 		Debug::p($stt->rowCount());
 		die;
 
 		// Get row first
-
 //		$stt_select = $this->_connection->prepare($query);
 //
 //		foreach ($this->_values as $k => $v)
@@ -932,14 +947,10 @@ class DBquery {
 //		$ids_str = implode(', ', $ids);
 //
 //		var_dump($ids);
-
 		// Do update
 //		$query_values = [];
-
 //		$query_values_str = implode(', ', $query_values);
-		
 //		$this->_query = "update into {$this->_table} ({$sets_str}) values ({$query_values_str});";
-
 //		$query = "update {$this->_table} set {$sets_str} where in ({$ids_str})";
 //		
 //		var_dump($this->_query);

@@ -27,25 +27,25 @@ class Controller_Home extends Controller {
 
 
 		// Insert
-//		$ids = $db->table('users')
-//				->insert([
-//			['username' => 'kohei', 'displayname' => 'kohx'],
-//			['username' => 'okuda', 'displayname' => 'okuda'],
-//		]);
-//		
-//		Debug::p($db->get_query());
-//		Debug::p($ids);
-//		die;
-		// Update
 		$ids = $db->table('users')
-				->where('id', 'in', [2,3,4,5])
-				->update(
-				['username' => 'kohei!', 'displayname' => 'kohx!']
-		);
-		Debug::p($ids);
+				->insert([
+			['username' => 'kohei', 'displayname' => 'kohx'],
+			['username' => 'okuda', 'displayname' => 'okuda'],
+		]);
+		
 		Debug::p($db->get_query());
+		Debug::p($ids);
 		die;
-		die;
+		// Update
+//		$ids = $db->table('users')
+//				->where('id', 'in', [2,3,4,5])
+//				->update(
+//				['username' => 'kohei!', 'displayname' => 'kohx!']
+//		);
+//		Debug::p($ids);
+//		Debug::p($db->get_query());
+//		die;
+//		die;
 
 //		$db = DB::fact()
 //				->select(DB::ex('max(id)'), DB::ex('min(id)'))
