@@ -809,6 +809,7 @@ class DBquery {
 	 */
 	public function insert()
 //	public function insert($param, ...$params) Here:: こっちに変更
+//	Here:: やっぱり１個づついれてidを取る！
 	{
 		$results = [];
 
@@ -915,15 +916,38 @@ class DBquery {
 	 */
 	public function update($data)
 	{
-		Debug::timer()->start();
-		
-		// where values for select
-		$select_where_values = $this->_values;
-
 		// Set type
 		$this->_type = 'update';
 
-		// Do update
+		/*
+		 * Select for effected
+		 */
+
+		// Select for effected	
+		$select_query = "select id from {$this->_table}";
+
+		// where
+		if ($this->_wheres)
+		{
+			$select_query .= ' ' . implode(' ', $this->_wheres);
+		}
+
+		$select_stt = $this->_connection->prepare($select_query);
+
+		foreach ($this->_values as $k => $v)
+		{
+			$type = is_numeric($v) ? PDO::PARAM_INT : PDO::PARAM_STR;
+
+			$select_stt->bindValue($k, $v, $type);
+		}
+
+		$select_stt->execute();
+		$selecte_fetch = $select_stt->fetchAll(PDO::FETCH_ASSOC);
+		$ids = Arr::pluck($selecte_fetch, 'id');
+
+		/*
+		 * Do delete 
+		 */
 		$sets = [];
 
 		foreach ($data as $key => $value)
@@ -939,7 +963,7 @@ class DBquery {
 		// where
 		if ($this->_wheres)
 		{
-			
+
 			$query .= ' ' . implode(' ', $this->_wheres);
 		}
 
@@ -953,33 +977,16 @@ class DBquery {
 		}
 
 		$stt->execute();
+		
+		// If has not effected row
+		if (!$stt->rowCount())
+		{
+			$ids = [];
+		}
 
+		// Build sql querys
 		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query);
 
-		// Select for effected	
-		$select_query = "select id from {$this->_table}";
-
-		// where
-		if ($this->_wheres)
-		{
-			$select_query .= ' ' . implode(' ', $this->_wheres);
-		}
-
-		$select_stt = $this->_connection->prepare($select_query);
-
-		foreach ($select_where_values as $k => $v)
-		{
-			$type = is_numeric($v) ? PDO::PARAM_INT : PDO::PARAM_STR;
-
-			$select_stt->bindValue($k, $v, $type);
-		}
-
-		$select_stt->execute();
-		$selecte_fetch = $select_stt->fetchAll(PDO::FETCH_ASSOC);
-		$ids = Arr::pluck($selecte_fetch, 'id');
-
-		Debug::timer()->end();
-		Debug::timer()->show();
 		$this->reset();
 		return $ids;
 	}
@@ -1000,16 +1007,47 @@ class DBquery {
 	 */
 	public function delete()
 	{
+		// Set type
 		$this->_type = 'delete';
 
-		$this->_query = "delete from {$this->_table}";
+		/*
+		 * Select for effected	
+		 */
+		$select_query = "select id from {$this->_table}";
 
+		// where
 		if ($this->_wheres)
 		{
-			$this->_query .= ' ' . implode(' ', $this->_wheres);
+			$select_query .= ' ' . implode(' ', $this->_wheres);
 		}
 
-		$stt = $this->_connection->prepare($this->_query);
+		$select_stt = $this->_connection->prepare($select_query);
+
+		foreach ($this->_values as $k => $v)
+		{
+			$type = is_numeric($v) ? PDO::PARAM_INT : PDO::PARAM_STR;
+
+			$select_stt->bindValue($k, $v, $type);
+		}
+
+		$select_stt->execute();
+		$selecte_fetch = $select_stt->fetchAll(PDO::FETCH_ASSOC);
+
+		$ids = Arr::pluck($selecte_fetch, 'id');
+
+		/*
+		 * Do delete 
+		 */
+		$query = "delete from {$this->_table}";
+
+		// where
+		if ($this->_wheres)
+		{
+
+			$query .= ' ' . implode(' ', $this->_wheres);
+		}
+
+		$stt = $this->_connection->prepare($query);
 
 		foreach ($this->_values as $key => $value)
 		{
@@ -1018,10 +1056,19 @@ class DBquery {
 			$stt->bindValue($key, $value, $type);
 		}
 
-		$this->_results = $stt->execute();
+		$stt->execute();
+
+		// If has not effected row
+		if (!$stt->rowCount())
+		{
+			$ids = [];
+		}
+
+		// Build sql query
+		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query);
 
 		$this->reset();
-		return $this->_results;
+		return $ids;
 	}
 
 	/**

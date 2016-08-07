@@ -37,6 +37,15 @@ class Debug {
 		echo '</pre>';
 	}
 
+	/**
+	 * timer
+	 * 
+	 *			Debug::timer()->start('name');
+	 *			Debug::timer()->end('name');
+	 *			Debug::timer()->show('name');
+	 * 
+	 * @return this
+	 */
 	public static function timer()
 	{
 		// Make instance
@@ -52,6 +61,9 @@ class Debug {
 	{
 	}
 
+	/*
+	 * Timer start
+	 */
 	public function start($name = 'default')
 	{
 		$this->_start_timer[$name] = microtime();
