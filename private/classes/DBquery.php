@@ -747,7 +747,7 @@ class DBquery {
 
 	/**
 	 * Selected row ount 
-	 *			For select
+	 * 			For select
 	 * 
 	 * 			$db = DB::fact()
 	 * 				->select()
@@ -785,49 +785,81 @@ class DBquery {
 	 * 
 	 * 			$id = $db->table('users')
 	 * 				->insert([
-	 * 							['email' => 'john@example.com', 'votes' => 0],
+	 * 							['username' => 'user1', 'email' => 'user1@mail.com'],
 	 * 						]);
 	 * 
 	 * 			$id = $db->table('users')
 	 * 						->insert([
-	 * 							['email' => 'john@example.com', 'votes' => 0],
-	 * 							['email' => 'john@example.com', 'votes' => 0]
+	 * 							['username' => 'user1', 'email' => 'user1@mail.com'],
+	 * 							['username' => 'user2', 'email' => 'user2@mail.com'],
+	 * 						]);
+	 * 
+	 *			// You can use like this too.
+	 * 			$id = $db->table('users')
+	 * 						->insert(
+	 *						['username', 'email'],
+	 *						[
+	 * 							['user1', 'user1@mail.com'],
+	 * 							['user2', 'user2@mail.com'],
 	 * 						]);
 	 * 
 	 * @param array $datas Array in array insert data.
 	 * @return \DB
 	 */
-	public function insert($datas)
+	public function insert()
 	{
-		// if args == 1 else 2
-		// 
 		// Set type
 		$this->_type = 'insert';
 
-		// Build keys
-		$keys = array_keys(reset($datas));
-		$keys_str = implode(', ', $keys);
+		$args = func_get_args();
 
-		// Build query
-		$query = "insert into {$this->_table} ({$keys_str}) values";
-		$query_values = [];
-
-		foreach ($datas as $data)
+		if (count($args) === 1)
 		{
-			$values = array_values($data);
+			$datas = reset($args);
+			$keys = array_keys(reset($datas));
 
-			$convertions = [];
+			$conversions_strs = [];
 
-			foreach ($values as $value)
+			foreach ($datas as $data)
 			{
-				$convertions[] = self::conv($value);
-			}
+				$values = array_values($data);
 
-			$conversions_str = implode(', ', $convertions);
-			$query_values[] = " ({$conversions_str})";
+				$convertions = [];
+
+				foreach ($values as $value)
+				{
+					$convertions[] = self::conv($value);
+				}
+
+				$conversions_str = implode(', ', $convertions);
+				$conversions_strs[] = " ({$conversions_str})";
+			}
+		}
+		else
+		{
+			$keys = reset($args);
+			$datas = end($args);
+			
+			foreach ($datas as $values)
+			{
+
+				$convertions = [];
+
+				foreach ($values as $value)
+				{
+					$convertions[] = self::conv($value);
+				}
+
+				$conversions_str = implode(', ', $convertions);
+				$conversions_strs[] = " ({$conversions_str})";
+			}
 		}
 
-		$query .= implode(', ', $query_values);
+		$keys_str = implode(', ', $keys);
+		$conversions_strs_str = implode(', ', $conversions_strs);
+
+		// Build query
+		$query = "insert into {$this->_table} ({$keys_str}) values {$conversions_strs_str}";
 
 		// Prepared
 		$stt = $this->_connection->prepare($query);
@@ -854,7 +886,7 @@ class DBquery {
 		{
 			$this->_results[] = $last_id - ($i - 1);
 		}
-		
+
 		// Make sql query 
 		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query);
 
