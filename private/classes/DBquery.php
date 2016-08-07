@@ -13,7 +13,7 @@ require_once 'AutoLoader.php';
 
 // Here:: task 
 // has value item change to prepare statment for select and delete
-// default "=" set to where
+// Here:: EXPRESSION DBquery::ex() を追加
 
 class DBquery {
 
@@ -795,11 +795,11 @@ class DBquery {
 	 * 							['username' => 'user2', 'email' => 'user2@mail.com'],
 	 * 						]);
 	 * 
-	 *			// You can use like this too.
+	 * 			// You can use like this too.
 	 * 			$id = $db->table('users')
 	 * 						->insert(
-	 *						['username', 'email'],
-	 *						[
+	 * 						['username', 'email'],
+	 * 						[
 	 * 							['user1', 'user1@mail.com'],
 	 * 							['user2', 'user2@mail.com'],
 	 * 						]);
@@ -808,9 +808,10 @@ class DBquery {
 	 * @return \DB
 	 */
 	public function insert()
+//	public function insert($param, ...$params) Here:: こっちに変更
 	{
 		$results = [];
-		
+
 		// Set type
 		$this->_type = 'insert';
 
@@ -842,7 +843,7 @@ class DBquery {
 		{
 			$keys = reset($args);
 			$datas = end($args);
-			
+
 			foreach ($datas as $values)
 			{
 
@@ -915,6 +916,9 @@ class DBquery {
 	public function update($data)
 	{
 		Debug::timer()->start();
+		
+		// where values for select
+		$select_where_values = $this->_values;
 
 		// Set type
 		$this->_type = 'update';
@@ -935,6 +939,7 @@ class DBquery {
 		// where
 		if ($this->_wheres)
 		{
+			
 			$query .= ' ' . implode(' ', $this->_wheres);
 		}
 
@@ -951,40 +956,32 @@ class DBquery {
 
 		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query);
 
-		// Get row first
-//		$stt_select = $this->_connection->prepare($query);
-//
-//		foreach ($this->_values as $k => $v)
-//		{
-//			if (is_array($v))
-//			{
-//				foreach ($v as $s)
-//				{
-//					$type = is_numeric($s) ? PDO::PARAM_INT : PDO::PARAM_STR;
-//				}
-//
-//				$type = is_numeric($s) ? PDO::PARAM_INT : PDO::PARAM_STR;
-//			}
-//
-//			$type = is_numeric($v) ? PDO::PARAM_INT : PDO::PARAM_STR;
-//
-//			$stt_select->bindValue($k, $v, $type);
-//		}
-//
-//		$stt_select->execute();
-//
-//		$selected = $stt_select->fetchAll(PDO::FETCH_ASSOC);
-//
-//		$ids = Arr::pluck($selected, 'id');
-//		$ids_str = implode(', ', $ids);
-//
-//		var_dump($ids);
+		// Select for effected	
+		$select_query = "select id from {$this->_table}";
 
-		$this->reset();
+		// where
+		if ($this->_wheres)
+		{
+			$select_query .= ' ' . implode(' ', $this->_wheres);
+		}
+
+		$select_stt = $this->_connection->prepare($select_query);
+
+		foreach ($select_where_values as $k => $v)
+		{
+			$type = is_numeric($v) ? PDO::PARAM_INT : PDO::PARAM_STR;
+
+			$select_stt->bindValue($k, $v, $type);
+		}
+
+		$select_stt->execute();
+		$selecte_fetch = $select_stt->fetchAll(PDO::FETCH_ASSOC);
+		$ids = Arr::pluck($selecte_fetch, 'id');
 
 		Debug::timer()->end();
 		Debug::timer()->show();
-		return $stt->rowCount();
+		$this->reset();
+		return $ids;
 	}
 
 	// Delete __________________________________________________________________

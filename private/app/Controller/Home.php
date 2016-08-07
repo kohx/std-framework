@@ -49,7 +49,7 @@ class Controller_Home extends Controller {
 		// Update
 		Debug::timer()->start('pre1');
 		$ids = $db->table('users')
-				->where('id', 'in', [2,3,4,5])
+				->where('id', 'in', [1,3,5,7,9])
 				->update(
 				['username' => 'kohei@', 'displayname' => 'kohx@']
 		);
@@ -57,7 +57,6 @@ class Controller_Home extends Controller {
 		Debug::p($db->get_query());
 		Debug::timer()->end('pre1');
 		Debug::timer()->show('pre1');
-		die;
 		die;
 //		$db = DB::fact()
 //				->select(DB::ex('max(id)'), DB::ex('min(id)'))

@@ -15,7 +15,7 @@
  * @copyright  (c) 2015-2016 Deraemons
  * @license    http://emon-cms.com/license
  */
-// Here:: not started yet
+// Here:: これを使ってるか各クラスをチェックする
 class I18n {
 
 	/**
