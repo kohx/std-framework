@@ -15,7 +15,7 @@ require_once 'AutoLoader.php';
 // has value item change to prepare statment for select and delete
 // Here:: EXPRESSION DBquery::ex() を追加
 
-class DBquery {
+class DB {
 
 	protected $_connection;
 	protected $_fetchmode = PDO::FETCH_ASSOC;
@@ -41,8 +41,6 @@ class DBquery {
 	protected $_query = '';
 	protected $_results = [];
 
-	const EXPRESSION = 'EXPRESSION';
-
 	/**
 	 * Factory
 	 * 
@@ -64,7 +62,7 @@ class DBquery {
 	public static function fact($name = 'default', $params = [])
 	{
 
-		return new DBquery($name, $params);
+		return new DB($name, $params);
 	}
 
 	/**
@@ -138,7 +136,7 @@ class DBquery {
 	{
 
 		$this->_connection->query($query)->execute();
-		$this->_query = $query;
+		$this->_query = $query. ';';
 	}
 
 	/**
@@ -151,25 +149,27 @@ class DBquery {
 	 * 
 	 * @return \DB
 	 */
-	public function select($columns = null)
+	public function select(...$params)
 	{
-		$args = func_get_args();
+		
+		Debug::p($params);
 
-		if (!$args)
+		if (!$params)
 		{
-
-			$this->_selects[] = '*';
+			$column = '*';
+			$conv = self::conv($column);
+			$segment .= $conv;
 		}
 		else
 		{
-			foreach ($args as $arg)
+			foreach ($params as $param)
 			{
 
-				if (is_array($arg))
+				if (is_array($param))
 				{
 					$segment = '';
 
-					list($column, $as) = $arg;
+					list($column, $as) = $param;
 
 					if (is_object($column))
 					{
@@ -195,13 +195,13 @@ class DBquery {
 				}
 				else
 				{
-					if (is_object($arg))
+					if (is_object($param))
 					{
-						$this->_selects[] = $arg->value;
+						$this->_selects[] = $param->value;
 					}
 					else
 					{
-						$this->_selects[] = self::conv($arg);
+						$this->_selects[] = self::conv($param);
 					}
 				}
 			}
@@ -563,59 +563,53 @@ class DBquery {
 	/**
 	 * execute for select
 	 * 
-	 * 
-	 * $db = DB::fact()
-	 * 		->select()
-	 * 		->table('users')
-	 * 		->execute();
-	 * 	
-	 * 
 	 * @return \DB
 	 */
-	public function execute()
+	protected function _select_execute()
 	{
-		$this->_query = 'select ';
+		$query = 'select ';
 
-		$this->_query .= implode(', ', $this->_selects);
+		$query .= implode(', ', $this->_selects);
 
-		$this->_query .= ' from ' . $this->_table;
+		$query .= ' from ' . $this->_table;
 
 		if ($this->_joins)
 		{
-			$this->_query .= ' ' . implode(' ', $this->_joins);
+			$query .= ' ' . implode(' ', $this->_joins);
 		}
 
 		if ($this->_wheres)
 		{
-			$this->_query .= ' ' . implode(' ', $this->_wheres);
+			$query .= ' ' . implode(' ', $this->_wheres);
 		}
 
 		if ($this->_groups)
 		{
-			$this->_query .= " group by " . implode(', ', $this->_query);
+			$query .= " group by " . implode(', ', $this->_query);
 		}
 
 		if ($this->_havings)
 		{
-			$this->_query .= ' ' . implode(' ', $this->_havings);
+			$query .= ' ' . implode(' ', $this->_havings);
 		}
 
 		if ($this->_orders)
 		{
-			$this->_query .= ' order by ' . implode(', ', $this->_orders);
+			$query .= ' order by ' . implode(', ', $this->_orders);
 		}
 
 		if ($this->_limit)
 		{
-			$this->_query .= ' limit ' . $this->_limit;
+			$query .= ' limit ' . $this->_limit;
 		}
 
 		if ($this->_offset)
 		{
-			$this->_query .= ' offset ' . $this->_offset;
+			$query .= ' offset ' . $this->_offset;
 		}
 
-		$stt = $this->_connection->prepare($this->_query);
+
+		$stt = $this->_connection->prepare($query);
 
 		foreach ($this->_values as $key => $value)
 		{
@@ -624,18 +618,28 @@ class DBquery {
 			$stt->bindValue($key, $value, $type);
 		}
 
+		Debug::p($query);
+		Debug::p($this->_values);
 		$stt->execute();
 
 		$this->_results = $stt->fetchAll($this->_fetchmode);
 
+		// Make sql query 
+		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query). ';';
+
 		$this->reset();
+
 		return $this;
 	}
 
 	/**
 	 * Return all of the rows in the result as an array.
 	 *
-	 * 			//After select excute 
+	 * 
+	 * 
+	 * 			$db = DB::fact()
+	 * 				->select()
+	 * 				->table('users')
 	 * 
 	 * 			// Indexed array of all rows
 	 * 			$rows = $db->get();
@@ -652,6 +656,8 @@ class DBquery {
 	 */
 	public function get($key = NULL, $value = NULL)
 	{
+		$this->_select_execute();
+
 		$results = array();
 
 		if ($key === NULL AND $value === NULL)
@@ -830,7 +836,7 @@ class DBquery {
 			$keys = $key_value;
 			$datas = array_values(reset($params));
 		}
-				
+
 		foreach ($datas as $data)
 		{
 			$convertions = [];
@@ -962,7 +968,7 @@ class DBquery {
 		}
 
 		// Build sql querys
-		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query);
+		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query). ';';
 
 		$this->reset();
 		return $ids;
@@ -1042,7 +1048,7 @@ class DBquery {
 		}
 
 		// Build sql query
-		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query);
+		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query). ';';
 
 		$this->reset();
 		return $ids;
@@ -1061,8 +1067,6 @@ class DBquery {
 	 */
 	public function reset()
 	{
-		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $this->_query);
-
 		$this->_type = null;
 		$this->_selects = [];
 		$this->_table = null;
@@ -1097,11 +1101,9 @@ class DBquery {
 		return $conversion;
 	}
 
-	public static function ex($arg)
+	public static function ex($str)
 	{
-		$return = new stdClass();
-		$return->value = $arg;
-		return $return;
+		
 	}
 
 }

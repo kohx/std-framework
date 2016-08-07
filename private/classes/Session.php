@@ -141,7 +141,7 @@ class Session implements SessionHandlerInterface, SessionIdInterface {
 	public function open($save_path, $session_name)
 	{
 		// Open database
-		$this->_database = DBquery::fact()->table(static::$_tablename);
+		$this->_database = DB::fact()->table(static::$_tablename);
 
 		return true;
 	}

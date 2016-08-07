@@ -22,7 +22,15 @@ class Controller_Home extends Controller {
 
 		// database query test
 
-		$db = DBquery::fact();
+		$db = DB::fact();
+		
+		$results = $db->table('users') 
+				->select('*')
+				->get();
+		
+		Debug::p($db->get_query());
+		Debug::p($results);
+		die;
 
 		// Insert1
 //		$ids = $db->table('users')
@@ -52,16 +60,16 @@ class Controller_Home extends Controller {
 //		die;
 //		 
 		// Insert2
- 		$ids = $db->table('users')
-				->insert(
-				['username', 'displayname'], [
-			['kohei1', 'kohx1'],
-			['kohei2', 'kohx2'],
-		]);
-
-		Debug::p($db->get_query());
-		Debug::p($ids);
-		die;
+// 		$ids = $db->table('users')
+//				->insert(
+//				['username', 'displayname'], [
+//			['kohei1', 'kohx1'],
+//			['kohei2', 'kohx2'],
+//		]);
+//
+//		Debug::p($db->get_query());
+//		Debug::p($ids);
+//		die;
 //		
 		// Update
 //		Debug::timer()->start('pre1');

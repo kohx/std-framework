@@ -15,7 +15,7 @@ require_once 'AutoLoader.php';
 // has value item change to prepare statment for select and delete
 // default "=" set to where
 
-class Dbquery {
+class DB {
 
 //$insert = Db::fact(Db::INSERT)
 //		->table('contents')
@@ -75,11 +75,11 @@ class Dbquery {
 	 * fact
 	 * 
 	 * @param array $param
-	 * @return \Db
+	 * @return \DB
 	 */
 	public static function fact(array $param = [])
 	{
-		return new Dbquery($param);
+		return new DB($param);
 	}
 
 	/**
@@ -235,7 +235,7 @@ class Dbquery {
 	 * $db->select('id', 'name') ------------------ select id, name 
 	 * $db->select(array('id', 'user_id'), 'id') -- select id as user_id, name
 	 * 
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function select($columns = null)
 	{
@@ -274,7 +274,7 @@ class Dbquery {
 	 * from
 	 * 
 	 * @param string $table
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function from($table)
 	{
@@ -286,7 +286,7 @@ class Dbquery {
 	/**
 	 * 
 	 * @param string $table
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function table($table)
 	{
@@ -302,7 +302,7 @@ class Dbquery {
 	 * 
 	 * @param string $table
 	 * @param string $type
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function join($table, $type = null)
 	{
@@ -325,7 +325,7 @@ class Dbquery {
 	 * @param string $colmun1
 	 * @param string $op
 	 * @param string $colmun2
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function on($colmun1, $op, $colmun2)
 	{
@@ -343,7 +343,7 @@ class Dbquery {
 	 * @param string $column
 	 * @param string $op
 	 * @param string $value
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function where($column, $op, $value)
 	{
@@ -366,7 +366,7 @@ class Dbquery {
 	 * @param string $column
 	 * @param string $op
 	 * @param string $value
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function and_where($column, $op, $value)
 	{
@@ -382,7 +382,7 @@ class Dbquery {
 	 * @param string $column
 	 * @param string $op
 	 * @param string $value
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function or_where($column, $op, $value)
 	{
@@ -395,7 +395,7 @@ class Dbquery {
 	/**
 	 * where_open
 	 * 
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function where_open()
 	{
@@ -408,7 +408,7 @@ class Dbquery {
 	/**
 	 * and_where_open
 	 * 
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function and_where_open()
 	{
@@ -421,7 +421,7 @@ class Dbquery {
 	/**
 	 * or_where_open
 	 * 
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function or_where_open()
 	{
@@ -434,7 +434,7 @@ class Dbquery {
 	/**
 	 * where_close
 	 * 
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function where_close()
 	{
@@ -447,7 +447,7 @@ class Dbquery {
 	/**
 	 * and_where_close
 	 * 
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function and_where_close()
 	{
@@ -460,7 +460,7 @@ class Dbquery {
 	/**
 	 * or_where_close
 	 * 
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function or_where_close()
 	{
@@ -480,7 +480,7 @@ class Dbquery {
 	 * 
 	 * @param string $limit
 	 * @param string $offset
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function limit($limit = null, $offset = null)
 	{
@@ -506,7 +506,7 @@ class Dbquery {
 	 * _by('orders.id desc', 'name asc')
 	 * 
 	 * @param type $column_direction
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function order_by($column_direction = null)
 	{
@@ -528,7 +528,7 @@ class Dbquery {
 	/**
 	 * as_object
 	 * 
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function as_object()
 	{
@@ -563,7 +563,7 @@ class Dbquery {
 	 * 
 	 * @param type $key
 	 * @param type $value
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function set($key, $value)
 	{
@@ -581,7 +581,7 @@ class Dbquery {
 	 * update
 	 * 
 	 * @param string $table
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function update($table = null)
 	{
@@ -602,7 +602,7 @@ class Dbquery {
 	 * delete
 	 * 
 	 * @param string $table
-	 * @return \Db
+	 * @return \DB
 	 */
 	public function delete($table = null)
 	{

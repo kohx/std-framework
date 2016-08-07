@@ -12,7 +12,7 @@ class Model {
 
 	public static function value($value)
 	{		
-		$query = Db::fact(Db::SELECT)
+		$query = DB::fact(DB::SELECT)
 				->select('value')
 				->table(static::$_table);
 
