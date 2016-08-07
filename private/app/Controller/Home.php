@@ -47,13 +47,16 @@ class Controller_Home extends Controller {
 //		Debug::p($ids);
 //		die;
 		// Update
+		Debug::timer()->start('pre1');
 		$ids = $db->table('users')
 				->where('id', 'in', [2,3,4,5])
 				->update(
-				['username' => 'kohei!', 'displayname' => 'kohx!']
+				['username' => 'kohei@', 'displayname' => 'kohx@']
 		);
 		Debug::p($ids);
 		Debug::p($db->get_query());
+		Debug::timer()->end('pre1');
+		Debug::timer()->show('pre1');
 		die;
 		die;
 //		$db = DB::fact()

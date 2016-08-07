@@ -37,6 +37,7 @@ class DBquery {
 	protected $_values = [];
 	//
 	protected $_as_object;
+	//
 	protected $_query = '';
 	protected $_results = [];
 
@@ -808,6 +809,8 @@ class DBquery {
 	 */
 	public function insert()
 	{
+		$results = [];
+		
 		// Set type
 		$this->_type = 'insert';
 
@@ -884,7 +887,7 @@ class DBquery {
 
 		for ($i = $count; $i >= 0; $i--)
 		{
-			$this->_results[] = $last_id - ($i - 1);
+			$results[] = $last_id - ($i - 1);
 		}
 
 		// Make sql query 
@@ -892,7 +895,7 @@ class DBquery {
 
 		$this->reset();
 
-		return $this->_results;
+		return $results;
 	}
 
 	// Update___________________________________________________________________
@@ -911,7 +914,7 @@ class DBquery {
 	 */
 	public function update($data)
 	{
-		$st = microtime();
+		Debug::timer()->start();
 
 		// Set type
 		$this->_type = 'update';
@@ -948,9 +951,6 @@ class DBquery {
 
 		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query);
 
-		Debug::p($stt->rowCount());
-		die;
-
 		// Get row first
 //		$stt_select = $this->_connection->prepare($query);
 //
@@ -979,30 +979,12 @@ class DBquery {
 //		$ids_str = implode(', ', $ids);
 //
 //		var_dump($ids);
-		// Do update
-//		$query_values = [];
-//		$query_values_str = implode(', ', $query_values);
-//		$this->_query = "update into {$this->_table} ({$sets_str}) values ({$query_values_str});";
-//		$query = "update {$this->_table} set {$sets_str} where in ({$ids_str})";
-//		
-//		var_dump($this->_query);
-//		var_dump($query);
-//
-//		$stt = $this->_connection->prepare($query);
-//
-//		foreach ($this->_values as $k => $v)
-//		{
-//			$type = is_numeric($v) ? PDO::PARAM_INT : PDO::PARAM_STR;
-//
-//			$stt->bindValue($k, $v, $type);
-//		}
-//
-//		$stt->execute();
 
 		$this->reset();
 
-		var_dump(microtime() - $st);
-		return $this->_results;
+		Debug::timer()->end();
+		Debug::timer()->show();
+		return $stt->rowCount();
 	}
 
 	// Delete __________________________________________________________________

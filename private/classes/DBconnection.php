@@ -13,27 +13,33 @@ require_once 'AutoLoader.php';
 
 class DBconnection {
 
+	public static $instance;
 	protected $_name = 'default';
 	protected $_connections = [];
 
 	public static function inst($name = 'default', $params = [])
 	{
-		
-		return new DBconnection($name, $params);
+		// Make instance
+		if (!isset(static::$instance))
+		{
+			static::$instance = new DBconnection($name, $params);
+		}
+
+		return static::$instance;
 	}
 
 	/**
 	 * Construct
 	 * 
-	 *		$params = [
-	 *			'dbtype' => '',
-	 *			'dbname' => '',
-	 *			'port' => '',
-	 *			'charset' => '',
-	 *			'filepath' => '',
-	 *			'username' => '',
-	 *			'passwd' => '',
-	 *			];
+	 * 		$params = [
+	 * 			'dbtype' => '',
+	 * 			'dbname' => '',
+	 * 			'port' => '',
+	 * 			'charset' => '',
+	 * 			'filepath' => '',
+	 * 			'username' => '',
+	 * 			'passwd' => '',
+	 * 			];
 	 * 
 	 * @param string $name
 	 * @param array $params
@@ -42,7 +48,7 @@ class DBconnection {
 	public function __construct($name = 'default', $params = [])
 	{
 		$this->_name = $name;
-		
+
 		if (!$params)
 		{
 			$params = Config::fact('db')->get('default');
@@ -56,7 +62,7 @@ class DBconnection {
 		$username = Arr::get($params, 'username');
 		$passwd = Arr::get($params, 'passwd');
 		$filepath = Arr::get($params, 'filepath');
-		
+
 		switch ($dbtype)
 		{
 			case 'mysql':
@@ -95,7 +101,7 @@ class DBconnection {
 
 		return $this;
 	}
-	
+
 	public function get($name = 'default')
 	{
 		return Arr::get($this->_connections, $name, false);
