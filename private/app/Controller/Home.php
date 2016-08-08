@@ -24,12 +24,16 @@ class Controller_Home extends Controller {
 
 		$db = DB::fact();
 		
-		$results = $db->table('users') 
-				->select('*')
-				->get();
+		// Select
+		$reslt_obj = $db->table('users') 
+				->select(['now()', 'date'], 'users.*', ['users.id', 'user_id']);
 		
-		Debug::p($db->get_query());
-		Debug::p($results);
+		
+		
+		Debug::p($reslt_obj->get(null, 'id'));
+		Debug::p($reslt_obj->get());
+		Debug::p($reslt_obj->count());
+		Debug::p($reslt_obj->get_query());
 		die;
 
 		// Insert1

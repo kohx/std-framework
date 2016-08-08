@@ -8,19 +8,27 @@
  * @author     kohx by Deraemons
  * @copyright  (c) 2015-2016 Deraemons
  * @license    http://emon-cms.com/license
+ * 
+ * Database tables have to  have 'id' column.
+ * ex)
+ * CREATE TABLE IF NOT EXISTS `users` (
+ *  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+ *  `username` varchar(45) DEFAULT NULL,
+ *  `displayname` varchar(45) DEFAULT NULL,
+ *  `created_at` datetime DEFAULT NULL,
+ *  `updated_at` datetime DEFAULT NULL,
+ *  PRIMARY KEY (`id`)
+ *  ENGINE=Inodb AUTO_INCREMENT=205 DEFAULT CHARSET=utf8;
+ * 
  */
 require_once 'AutoLoader.php';
 
 // Here:: task 
-// has value item change to prepare statment for select and delete
-// Here:: EXPRESSION DBquery::ex() を追加
 
 class DB {
 
 	protected $_connection;
 	protected $_fetchmode = PDO::FETCH_ASSOC;
-	//
-	protected $_type;
 	//
 	protected $_selects = [];
 	protected $_table;
@@ -136,78 +144,7 @@ class DB {
 	{
 
 		$this->_connection->query($query)->execute();
-		$this->_query = $query. ';';
-	}
-
-	/**
-	 * select
-	 * 
-	 * 			$db->select() ------------------------------ select * 
-	 * 			$db->select('*') --------------------------- select * 
-	 * 			$db->select('id', 'name') ------------------ select id, name 
-	 * 			$db->select(array('id', 'user_id'), 'id') -- select id as user_id, name
-	 * 
-	 * @return \DB
-	 */
-	public function select(...$params)
-	{
-		
-		Debug::p($params);
-
-		if (!$params)
-		{
-			$column = '*';
-			$conv = self::conv($column);
-			$segment .= $conv;
-		}
-		else
-		{
-			foreach ($params as $param)
-			{
-
-				if (is_array($param))
-				{
-					$segment = '';
-
-					list($column, $as) = $param;
-
-					if (is_object($column))
-					{
-						$segment .= $column->value;
-					}
-					else
-					{
-						$conv = self::conv($column);
-						$segment .= $conv;
-					}
-
-					if (is_object($as))
-					{
-						$segment .= $as->value;
-					}
-					else
-					{
-						$conv = self::conv($as);
-						$segment .= ' as ' . $conv;
-					}
-
-					$this->_selects[] = $segment;
-				}
-				else
-				{
-					if (is_object($param))
-					{
-						$this->_selects[] = $param->value;
-					}
-					else
-					{
-						$this->_selects[] = self::conv($param);
-					}
-				}
-			}
-		}
-
-		return $this;
+		$this->_query = $query . ';';
 	}
 
 	/**
@@ -561,56 +498,107 @@ class DB {
 	// select___________________________________________________________________
 
 	/**
-	 * execute for select
+	 * select
+	 * 
+	 * 			$db->join('details', 'user.id', 'details.user_id')
+	 * 				->where('id', 'in', [1,2,3,4,5])
+	 * 				->order('id')
+	 * 				->->select();
+	 * 
+	 * 			$db->select() ------------------------------ select * 
+	 * 			$db->select('*') --------------------------- select * 
+	 * 			$db->select('id', 'name') ------------------ select id, name 
+	 * 			$db->select(array('id', 'user_id'), 'id') -- select id as user_id, name
 	 * 
 	 * @return \DB
 	 */
-	protected function _select_execute()
+	public function select(...$params)
 	{
+		/*
+		 * Set select
+		 */
+		// When not have params
+		if (!$params)
+		{
+			$this->_selects[] = '*';
+		}
+		else
+		{
+			foreach ($params as $param)
+			{
+				// When param has as
+				if (is_array($param))
+				{
+					list($column, $as) = $param;
+
+					$this->_selects[] = "{$column} as {$as}";
+				}
+				// When jast param
+				else
+				{
+					$this->_selects[] = $param;
+				}
+			}
+		}
+
+		/*
+		 * Do select
+		 */
+		// Set select
 		$query = 'select ';
 
+		// Set select columns
 		$query .= implode(', ', $this->_selects);
 
+		// Set from table
 		$query .= ' from ' . $this->_table;
 
+		// If has joins set these
 		if ($this->_joins)
 		{
 			$query .= ' ' . implode(' ', $this->_joins);
 		}
 
+		// If has wheres set these
 		if ($this->_wheres)
 		{
 			$query .= ' ' . implode(' ', $this->_wheres);
 		}
 
+		// If has groups set these
 		if ($this->_groups)
 		{
 			$query .= " group by " . implode(', ', $this->_query);
 		}
 
+		//  If has havings set these
 		if ($this->_havings)
 		{
 			$query .= ' ' . implode(' ', $this->_havings);
 		}
 
+		// If has orders set these
 		if ($this->_orders)
 		{
 			$query .= ' order by ' . implode(', ', $this->_orders);
 		}
 
+		// If has limit set it
 		if ($this->_limit)
 		{
 			$query .= ' limit ' . $this->_limit;
 		}
 
+		// If has offset set it
 		if ($this->_offset)
 		{
 			$query .= ' offset ' . $this->_offset;
 		}
 
-
+		// Prepare
 		$stt = $this->_connection->prepare($query);
 
+		// Bind values
 		foreach ($this->_values as $key => $value)
 		{
 			$type = is_numeric($value) ? PDO::PARAM_INT : PDO::PARAM_STR;
@@ -618,14 +606,13 @@ class DB {
 			$stt->bindValue($key, $value, $type);
 		}
 
-		Debug::p($query);
-		Debug::p($this->_values);
 		$stt->execute();
 
+		// Set to this results
 		$this->_results = $stt->fetchAll($this->_fetchmode);
 
 		// Make sql query 
-		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query). ';';
+		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query) . ';';
 
 		$this->reset();
 
@@ -635,11 +622,9 @@ class DB {
 	/**
 	 * Return all of the rows in the result as an array.
 	 *
-	 * 
-	 * 
 	 * 			$db = DB::fact()
-	 * 				->select()
 	 * 				->table('users')
+	 * 				->select();
 	 * 
 	 * 			// Indexed array of all rows
 	 * 			$rows = $db->get();
@@ -655,9 +640,7 @@ class DB {
 	 * @return  array
 	 */
 	public function get($key = NULL, $value = NULL)
-	{
-		$this->_select_execute();
-
+	{		
 		$results = array();
 
 		if ($key === NULL AND $value === NULL)
@@ -754,15 +737,8 @@ class DB {
 
 	/**
 	 * Selected row ount 
-	 * 			For select
-	 * 
-	 * 			$db = DB::fact()
-	 * 				->select()
-	 * 				->table('users')
-	 * 				->get();
 	 * 
 	 * 			$count = $db->count();
-	 * 
 	 * 
 	 * @return int
 	 */
@@ -770,16 +746,6 @@ class DB {
 	{
 
 		return count($this->_results);
-	}
-
-	/**
-	 * get query
-	 * @return string
-	 */
-	public function get_query()
-	{
-
-		return $this->_query;
 	}
 
 	// Insert___________________________________________________________________
@@ -811,14 +777,11 @@ class DB {
 	 * 						]);
 	 * 
 	 * @param array $datas Array in array insert data.
-	 * @return \DB
+	 * @return array effected ids
 	 */
 	public function insert($key_value, ...$params)
 	{
 		$ids = [];
-
-		// Set type
-		$this->_type = 'insert';
 
 		if (!$params)
 		{
@@ -890,18 +853,15 @@ class DB {
 	 * 
 	 * UPDATE tbl_name SET col_name1=expr1 , col_name2=expr2 ... WHERE column;
 	 * 
-	 * 			db->table('users')
+	 * 			$db->table('users')
 	 * 				->where('id', 1)
 	 * 				->update(['votes' => 1]);
 	 * 
 	 * @param array $data
-	 * @return \DB
+	 * @return array effected ids
 	 */
 	public function update($data)
 	{
-		// Set type
-		$this->_type = 'update';
-
 		/*
 		 * Select for effected
 		 */
@@ -968,7 +928,7 @@ class DB {
 		}
 
 		// Build sql querys
-		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query). ';';
+		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query) . ';';
 
 		$this->reset();
 		return $ids;
@@ -986,13 +946,11 @@ class DB {
 	 * 				->delete();
 	 *  
 	 * @return bool
-	 * @return \DB
+	 * @return array effected ids
 	 */
-	public function delete()
+	public function delete($id = null)
 	{
-		// Set type
-		$this->_type = 'delete';
-
+		//Here:: edit use id
 		/*
 		 * Select for effected	
 		 */
@@ -1048,10 +1006,22 @@ class DB {
 		}
 
 		// Build sql query
-		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query). ';';
+		$this->_query = str_replace(array_keys($this->_values), array_values($this->_values), $query) . ';';
 
 		$this->reset();
 		return $ids;
+	}
+	
+	//__________________________________________________________________________
+
+	/**
+	 * get query
+	 * @return string
+	 */
+	public function get_query()
+	{
+
+		return $this->_query;
 	}
 
 	/**
@@ -1067,7 +1037,6 @@ class DB {
 	 */
 	public function reset()
 	{
-		$this->_type = null;
 		$this->_selects = [];
 		$this->_table = null;
 		$this->_joins = [];
@@ -1099,11 +1068,6 @@ class DB {
 		$this->_values[$conversion] = $value;
 
 		return $conversion;
-	}
-
-	public static function ex($str)
-	{
-		
 	}
 
 }
